@@ -39,3 +39,99 @@ MidpointRounding 策略对比
 3.5	4（偶数）	4	3	3	4
 4.5	4（偶数）	5	4	4	5
 
+
+. Math.Ceiling(double value)
+	• 功能：返回大于或等于指定数值的最小整数（向上取整）。
+	• 规则：不管小数是多少，只要有小数部分，就进 1。
+	• 例子：
+
+Math.Ceiling(3.1);   // 4
+Math.Ceiling(3.9);   // 4
+Math.Ceiling(-3.1);  // -3   (注意负数也向上取整，-3 > -3.1)
+
+📌 2. Math.Round(double value)
+	• 功能：把数值四舍五入到最近的整数（或指定的小数位）。
+	• 规则：
+		○ 默认是 四舍六入，五取偶（银行家舍入法）。
+		○ 可以用重载指定舍入方式，比如 MidpointRounding.AwayFromZero（传统四舍五入）。
+	• 例子：
+
+Math.Round(3.1);  // 3
+Math.Round(3.9);  // 4
+Math.Round(2.5);  // 2 (默认五取偶)
+Math.Round(3.5);  // 4 (默认五取偶)
+
+// 如果指定 AwayFromZero
+Math.Round(2.5, MidpointRounding.AwayFromZero);  // 3
+Math.Round(3.5, MidpointRounding.AwayFromZero);  // 4
+
+📌 总结对比
+	• Math.Ceiling：无条件向上取整（靠近 +∞）。
+	• Math.Round：四舍五入（默认五取偶，可以改成 AwayFromZero）。
+如果你用的是 C#：
+
+Math.Round(6.5); // → 6  （银行家舍入法）
+Math.Round(6.6); // → 7
+C# 默认使用的是 银行家舍入（Banker’s Rounding），也就是：
+	当小数正好是 .5 时，取最接近的偶数。
+你想让我帮你对比 JavaScript vs C# 的 Math.Round 行为区别表吗？
+You said:
+就是0.5特殊是吧
+ChatGPT said:
+对，✅ 没错！
+0.5 是一个特殊边界情况，在不同语言里处理方式不一样。
+下面给你清晰对比 👇
+
+🟢 JavaScript 的规则
+
+Math.round(6.5) // 7
+Math.round(7.5) // 8
+Math.round(-6.5) // -6
+Math.round(-7.5) // -7
+🧠 逻辑：
+	• 小数部分 ≥ 0.5 就 向上取整；
+	• “向上” 是指 数轴方向更大（不是远离 0）。
+👉 所以 JS 的 Math.round(6.5) 变成 7。
+
+🔵 C# 的规则（默认）
+
+Math.Round(6.5); // 6
+Math.Round(7.5); // 8
+Math.Round(-6.5); // -6
+Math.Round(-7.5); // -8
+🧠 逻辑：
+	• C# 默认采用 银行家舍入法（Banker’s Rounding）
+	• 当刚好是 .5 时，取最接近的偶数。
+所以：
+输入	输出	说明
+6.5	6	6 是偶数
+7.5	8	8 是偶数
+
+⚙️ 如果你想在 C# 中用传统“四舍五入”行为：
+
+Math.Round(6.5, MidpointRounding.AwayFromZero); // 7
+
+
+很好 👍 那我们把 Math.floor() 也加上，一起对比看看：
+
+🧮 三个函数对比表
+表达式	结果	说明
+Math.round(-6.5)	-6	四舍五入（靠近 0）
+Math.round(-6.1)	-6	四舍五入（靠近 0）
+Math.ceil(-6.5)	-6	向上取整（朝 +∞）
+Math.ceil(-6.1)	-6	向上取整（朝 +∞）
+Math.floor(-6.5)	-7	向下取整（朝 -∞）
+Math.floor(-6.1)	-7	向下取整（朝 -∞）
+
+🧩 总结记忆：
+	• Math.round() → 四舍五入（中点靠近 0）
+	• Math.ceil() → 向上取整（靠近 +∞）
+	• Math.floor() → 向下取整（靠近 -∞）
+
+💡 举个形象例子：
+假设你在地下一层（-6楼）：
+	• ceil = 往上走 → 到 -6 楼
+	• floor = 往下走 → 到 -7 楼
+	• round = 看哪个更近，如果在 -6.5 就“靠近地面” → -6
+
+
