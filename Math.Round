@@ -24,3 +24,18 @@ Assert.AreEqual(12, b);
 var a = Math.Round(6.5f, MidpointRounding.AwayFromZero); // 7
 var b = Math.Round(11.5f, MidpointRounding.AwayFromZero); // 12
 Do you want me to explain why .NET uses banker’s rounding (ToEven) by default?
+
+MidpointRounding 策略对比
+数字	ToEven (默认，银行家舍入)	AwayFromZero (传统四舍五入)	ToZero (趋向零)	ToNegativeInfinity (向下取整)	ToPositiveInfinity (向上取整)
+1.5	2（偶数）	2	1	1	2
+2.5	2（偶数）	3	2	2	3
+3.5	4（偶数）	4	3	3	4
+4.5	4（偶数）	5	4	4	5
+
+MidpointRounding 策略对比
+数字	ToEven (默认，银行家舍入)	AwayFromZero (传统四舍五入)	ToZero (趋向零)	ToNegativeInfinity (向下取整)	ToPositiveInfinity (向上取整)
+1.5	2（偶数）	2	1	1	2
+2.5	2（偶数）	3	2	2	3
+3.5	4（偶数）	4	3	3	4
+4.5	4（偶数）	5	4	4	5
+
