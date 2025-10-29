@@ -1,0 +1,26 @@
+ [TestMethod]
+ public void TestMathRound()
+ {
+     var a=Math.Round(6.5f);
+     var b = Math.Round(11.5f);
+
+     Assert.AreEqual(6, a);
+     Assert.AreEqual(12, b);
+ }
+注意6.5 是6 6.6 是7  11.5 是12
+
+1. he result of Math.Round can differ depending on overloads and the rounding mode (MidpointRounding).
+	○ By default, Math.Round(double) uses MidpointRounding.ToEven ("banker’s rounding").
+		§ 6.5 → 6 (rounded to the nearest even)
+		§ 11.5 → 12 (rounded to the nearest even)
+So the correct test is:
+
+var a = Math.Round(6.5f);   // result: 6
+var b = Math.Round(11.5f);  // result: 12
+Assert.AreEqual(6, a);
+Assert.AreEqual(12, b);
+👉 If you expected both 6.5 → 7 and 11.5 → 12, you’d need to specify MidpointRounding.AwayFromZero:
+
+var a = Math.Round(6.5f, MidpointRounding.AwayFromZero); // 7
+var b = Math.Round(11.5f, MidpointRounding.AwayFromZero); // 12
+Do you want me to explain why .NET uses banker’s rounding (ToEven) by default?
