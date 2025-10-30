@@ -1,0 +1,166 @@
+
+1️⃣ 单元测试（Unit Test）
+	• 目标：测试单个类或方法逻辑，不依赖数据库、API 或外部系统
+	• 特点：
+		○ 使用 Mock 框架 模拟依赖（如 Moq）
+		○ 运行快、独立
+示例：MSTest + Moq
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using System.Collections.Generic;
+[TestClass]
+public class OrderServiceTests
+{
+    [TestMethod]
+    public void CalculateTotal_ReturnsCorrectSum()
+    {
+        // Arrange
+        var mockRepo = new Mock<IOrderRepository>();
+        mockRepo.Setup(r => r.GetOrders()).Returns(new List<Order>
+        {
+            new Order { Amount = 100 },
+            new Order { Amount = 50 }
+        });
+var service = new OrderService(mockRepo.Object);
+// Act
+        var total = service.CalculateTotal();
+// Assert
+        Assert.AreEqual(150, total);
+    }
+}
+	这里测试的是 OrderService 的逻辑，不涉及数据库或外部服务
+
+2️⃣ 集成测试（Integration Test）
+	• 目标：测试多个组件协作或真实环境行为
+	• 特点：
+		○ 可以连接数据库、Web API、文件系统等
+		○ 测试真实数据或近似真实环境
+		○ 比单元测试慢
+示例：MSTest + InMemory DB
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.EntityFrameworkCore;
+[TestClass]
+public class UserRepositoryTests
+{
+    private DbContextOptions<AppDbContext> _options;
+[TestInitialize]
+    public void Setup()
+    {
+        _options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(databaseName: "TestDb")
+            .Options;
+    }
+[TestMethod]
+    public void CanAddAndRetrieveUser()
+    {
+        // Insert
+        using (var context = new AppDbContext(_options))
+        {
+            var repo = new UserRepository(context);
+            repo.Add(new User { Name = "Alice" });
+            context.SaveChanges();
+        }
+// Retrieve
+        using (var context = new AppDbContext(_options))
+        {
+            var repo = new UserRepository(context);
+            var user = repo.GetByName("Alice");
+            Assert.IsNotNull(user);
+        }
+    }
+}
+	这里测试了 Repository + DbContext 的整体行为，属于集成测试
+
+3️⃣ 项目组织建议
+	• MyApp.Tests.Unit → 单元测试
+	• MyApp.Tests.Integration → 集成测试
+	• 单元测试快速、Mock 外部依赖
+	• 集成测试真实调用数据库或服务
+
+4️⃣ 总结
+测试类型	目标	依赖	速度
+单元测试	单个类/方法逻辑	Mock 依赖	快
+集成测试	多个类或服务协作	数据库/服务真实环境	慢
+
+如果你愿意，我可以帮你写一个 完整 MSTest 模板，
+包含：
+	• 单元测试：类/方法 + Moq
+	• 集成测试：InMemory 数据库 + Repository
+
+
+你问 C# 中的 Mock，我给你详细梳理一下，包括 MSTest/xUnit 常用用法和概念。
+
+1️⃣ Mock 的概念
+	• Mock（模拟对象）：在单元测试中，用来替代真实依赖
+	• 目的：
+		1. 隔离被测试对象，只测试自身逻辑
+		2. 控制依赖行为（比如返回固定值、抛异常）
+		3. 验证交互（某个方法是否被调用）
+	• 常用场景：
+		○ 数据库访问接口
+		○ API 客户端
+		○ Service 层依赖
+		○ 状态管理 / 全局配置
+
+2️⃣ 常用 Mock 框架
+框架	特点
+Moq	最常用，语法简单，支持 LINQ 风格 Setup / Verify
+NSubstitute	更自然语法，像调用真实对象
+FakeItEasy	轻量，简单易用
+
+3️⃣ MSTest + Moq 示例
+假设你有一个 OrderService 依赖 IOrderRepository：
+
+public interface IOrderRepository
+{
+    List<Order> GetOrders();
+}
+public class OrderService
+{
+    private readonly IOrderRepository _repo;
+    public OrderService(IOrderRepository repo) => _repo = repo;
+public int CalculateTotal() => _repo.GetOrders().Sum(o => o.Amount);
+}
+Mock 示例：
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using System.Collections.Generic;
+[TestClass]
+public class OrderServiceTests
+{
+    [TestMethod]
+    public void CalculateTotal_ReturnsCorrectSum()
+    {
+        // 1️⃣ 创建 Mock 对象
+        var mockRepo = new Mock<IOrderRepository>();
+// 2️⃣ 设置行为
+        mockRepo.Setup(r => r.GetOrders()).Returns(new List<Order>
+        {
+            new Order { Amount = 100 },
+            new Order { Amount = 50 }
+        });
+// 3️⃣ 注入 Mock
+        var service = new OrderService(mockRepo.Object);
+// 4️⃣ 调用方法
+        var total = service.CalculateTotal();
+// 5️⃣ 验证结果
+        Assert.AreEqual(150, total);
+// 6️⃣ 可选：验证方法是否被调用
+        mockRepo.Verify(r => r.GetOrders(), Times.Once);
+    }
+}
+
+4️⃣ Mock 的常见操作
+操作	Moq 语法
+返回固定值	mock.Setup(x => x.Method()).Returns(value)
+抛异常	mock.Setup(x => x.Method()).Throws(new Exception())
+验证调用	mock.Verify(x => x.Method(), Times.Once)
+可匹配参数	mock.Setup(x => x.Method(It.IsAny<int>()))
+
+5️⃣ 总结
+	• Mock 用于 隔离依赖，保证单元测试只测试自身逻辑
+	• MSTest + Moq 是 C# 项目最常用组合
+集成测试一般不使用 Mock，而是真实依赖（如 InMemory DB）
