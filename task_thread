@@ -1,0 +1,60 @@
+1️⃣ 基本概念
+名称	定义	特点
+Thread（线程）	操作系统调度的最小执行单元	由 OS 调度，独立栈空间，耗费系统资源，手动管理同步
+Task（任务）	高级抽象，表示一次异步操作或工作单元	不直接与 OS 线程绑定，可通过线程池执行，更轻量，易管理，可组合
+
+2️⃣ 线程 vs 任务
+Thread
+	• 创建方式：
+
+Thread t = new Thread(() => {
+    Console.WriteLine("Hello from thread");
+});
+t.Start();
+	• 优点：
+		○ 可以控制线程优先级
+		○ 可以长期运行的后台线程
+	• 缺点：
+		○ 开销大（每个线程都有独立栈空间）
+		○ 手动管理线程同步、阻塞操作复杂
+
+Task
+	• 创建方式：
+
+Task t = Task.Run(() => {
+    Console.WriteLine("Hello from task");
+});
+await t;
+	• 特点：
+		○ 任务由 线程池 执行，不必手动管理线程
+		○ 支持 async/await 异步编程
+		○ 易于组合多个任务（Task.WhenAll、Task.WhenAny）
+	• 优点：
+		○ 资源开销小，线程池复用线程
+		○ 异步操作、并行计算更容易管理
+	• 缺点：
+		○ 对于长期阻塞的操作，需要注意线程池线程耗尽
+		○ 不能直接控制 OS 线程优先级
+
+3️⃣ 总结记忆
+	• Thread = 线程，操作系统调度的实际执行单位
+	• Task = 任务，高级抽象，不直接绑定线程，通常由线程池执行
+	• 最佳实践：
+		○ 新建独立长期线程 → 用 Thread
+		○ 异步操作 / 并行计算 / 短时任务 → 用 Task
+
+💡 比喻：
+	• Thread = “出租车”，每辆车独立，启动慢，资源占用大
+	• Task = “叫车请求”，由出租车池（线程池）分配车，轻量灵活
+You can say it in English like this:
+“A Task is a higher-level abstraction (or wrapper) over a Thread.”
+Or a slightly more detailed version:
+“In .NET, a Task represents an asynchronous operation and serves as a higher-level abstraction over a Thread, typically executed by the thread pool rather than a dedicated OS thread.”
+If you want, I can give a short version suitable for interview answers.
+You said:
+用encapsulate
+ChatGPT said:
+你可以这样说：
+“A Task encapsulates a Thread, providing a higher-level abstraction for asynchronous operations.”
+或者稍微详细一点：
+“In .NET, a Task encapsulates a Thread, typically using the thread pool to execute code asynchronously, making it easier to manage concurrency and resources.”
