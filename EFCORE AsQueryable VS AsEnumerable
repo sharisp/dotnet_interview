@@ -1,0 +1,113 @@
+好——把 **EF Core** 里常被混淆的两个方法用尽量短、实用且贴近生产的方式把差异讲清楚，并给出容易复制的示例代码和最佳实践。
+
+---
+
+## 核心一句话
+
+* **`AsQueryable()`：保持为 `IQueryable<T>`（延迟、可被 EF 翻译成 SQL 的表达式树）**。
+* **`AsEnumerable()`：把查询转换成 `IEnumerable<T>`（把后续操作切到内存中，用 LINQ to Objects 执行；会触发 DB 查询或至少阻止 EF 将后续表达式翻译成 SQL）**。
+
+---
+
+## 关键点（必须记住）
+
+1. **执行时机**
+
+   * `AsEnumerable()` 会导致后续的操作在内存中执行（虽然它本身不一定立即执行 SQL，但常常与立即执行方法连用导致把数据拉到客户端）。
+   * `AsQueryable()` 不会触发查询；只是在 `IEnumerable` 上装回 `IQueryable` 接口，适合动态拼接表达式。
+
+2. **谁做翻译（SQL vs .NET）**
+
+   * 在 `IQueryable` 管道里的表达式，EF 尽量把它们**翻译成 SQL**。
+   * 一旦你把序列转成 `IEnumerable`（例如 `AsEnumerable()` 之后），后续的 `.Where`, `.Select` 都在 **客户端（内存）** 执行。
+
+3. **参数类型差异**
+
+   * `IQueryable.Where` 接受 `Expression<Func<T,bool>>`（可转换为 SQL）
+   * `IEnumerable.Where` 接受 `Func<T,bool>`（纯委托，在内存执行）
+
+4. **性能影响**
+
+   * 错误地在查询早期用 `AsEnumerable()` 会把大量数据拉下来，造成性能灾难。
+   * 尽量把可翻译的过滤/投影留给数据库执行。
+
+---
+
+## 示例对比
+
+假设有 `db.Users`：
+
+```csharp
+// 推荐 — 全部在数据库执行（高效）
+var q1 = db.Users
+           .Where(u => u.IsActive && u.Age > 18)
+           .Select(u => new { u.Id, u.Name });
+var list1 = await q1.ToListAsync(); // SQL: SELECT Id, Name FROM Users WHERE IsActive=1 AND Age>18
+
+// 错误示例 — 提前切到内存（可能拉取所有 Users）
+var list2 = db.Users
+              .AsEnumerable()              // <-- 切换到 LINQ to Objects
+              .Where(u => SomeLocalCheck(u)) // SomeLocalCheck 是不能被翻译的本地方法
+              .ToList();                   // 不推荐（会先把 Users 全部取出）
+```
+
+如果确实需要在本地方法上筛选，先把必要的列/过滤 push 到 DB，再用 `AsEnumerable()`：
+
+```csharp
+var list3 = db.Users
+              .Where(u => u.IsActive)       // 先减少行数（在 DB）
+              .Select(u => new { u.Id, u.Name, u.Code })
+              .AsEnumerable()               // 再切到内存
+              .Where(x => MyLocalCheck(x.Code))
+              .ToList();
+```
+
+---
+
+## `AsQueryable()` 使用场景
+
+1. 当你有一个 `IEnumerable<T>`（比如来自外部方法或内存集合）却希望把它当 `IQueryable` 拼接表达式时可以用（但注意：如果底层不是可以翻译成 SQL 的 provider，拼接也不会变成 SQL）：
+
+```csharp
+IEnumerable<User> mem = GetUsersFromCache();
+IQueryable<User> q = mem.AsQueryable(); // 只是把接口变回 IQueryable（并不 magically 变回数据库查询）
+```
+
+2. 在构建动态查询管线时常用：
+
+```csharp
+IQueryable<User> query = db.Users.AsQueryable();
+
+if(!string.IsNullOrEmpty(name))
+    query = query.Where(u => u.Name.Contains(name));
+
+if(minAge.HasValue)
+    query = query.Where(u => u.Age >= minAge.Value);
+
+var res = await query.ToListAsync(); // 整个表达式会被一次性翻成 SQL
+```
+
+---
+
+## 常见误区 & 注意事项
+
+* **`AsEnumerable()` 不总是立即触发 SQL，但它会改变后续 LINQ 的执行上下文（从可翻译的表达式树变成委托）**。
+* **不要把 `AsEnumerable()` 放在你想让 DB 做过滤/分页/排序之前**（否则会把大量数据拉下来再做分页）。
+* 使用 `AsQueryable()` 把一个纯内存集合转为 `IQueryable` 并不会让 EF 把它翻译为 SQL。只有当底层 provider 支持表达式树转换（例如 EF 的 `DbSet`）时，才会被翻译。
+
+---
+
+## 实务最佳实践（简短清单）
+
+* 优先把过滤（Where）、排序（OrderBy）、分页（Skip/Take）放到 `IQueryable` 管道里，让数据库处理。
+* 只有当你需要调用无法被 EF 翻译的方法（例如正则、复杂 C# 方法）时才使用 `AsEnumerable()`，而且尽量在 `Select` 后再 `AsEnumerable()` 以尽量减少传输的数据量。
+* 构建动态查询时，使用 `IQueryable`（`AsQueryable()` 一般用于把 `DbSet` 或其他可查询源标准化）。
+* 对性能敏感的查询，先用 `[ToList]` / `ToListAsync()` 也要谨慎 —— 明确知道你拉下来的数据量。
+
+---
+
+## 小结（一句话结束）
+
+* 想 **让数据库做更多事** → 保持 `IQueryable`（不要 `AsEnumerable()`）。
+* 必须 **在客户端用 C# 方法处理** → 在尽量晚的位置调用 `AsEnumerable()`，并先用数据库减少数据量。
+
