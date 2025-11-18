@@ -27,3 +27,18 @@ infra	🏗️ 基础设施改动（如数据库脚本、云部署等）
 docker	🐳 Dockerfile 或容器相关变更
 lint	🧹 代码检查工具配置或执行变动
 deps-dev	👷‍♂️ 开发依赖调整（如 eslint, prettier 升级）
+
+📌 推荐模板格式（带 scope）
+
+bash
+复制编辑
+<type>(<scope>): <message>
+示例：
+
+bash
+复制编辑
+git commit -m "feat(user): add user modal form with validation"
+git commit -m "fix(permission): correct permission check logic"
+git commit -m "refactor(api): extract common request logic"
+git commit -m "chore: update dependencies and format code"
+git commit -m "docs(readme): add usage instructions"
