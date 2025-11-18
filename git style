@@ -1,0 +1,29 @@
+✅ 标准 & 常用类型
+type	含义说明
+feat	✨ 新增功能（Feature）
+fix	🐛 修复 Bug
+docs	📝 修改文档（不影响代码运行）
+style	💄 代码格式修改（无逻辑变更，如缩进、分号）
+refactor	🔨 代码重构（非新增功能或修复 Bug）
+perf	⚡ 性能优化
+test	✅ 增加或修改测试代码
+build	🏗️ 构建流程或依赖修改（如 webpack、vite）
+ci	🤖 CI 配置或脚本修改（如 GitHub Actions、Jenkins）
+chore	🔧 杂项，不影响代码运行的改动（如修改 .gitignore、package.json）
+revert	⏪ 回滚历史提交
+merge	🔀 合并分支（不常用，但部分团队保留）
+
+
+🧩 衍生 & 可选类型（按需使用）
+type	说明
+init	🚀 项目初始化
+release	🚢 发布版本（可用于 semantic-release）
+deps	📦 升级依赖（也可以归入 chore）
+config	⚙️ 修改配置文件（如 .eslintrc, tsconfig.json）
+security	🔐 修复安全问题
+ux / ui	🎨 用户体验相关（也可以归入 style）
+i18n	🌐 国际化相关改动
+infra	🏗️ 基础设施改动（如数据库脚本、云部署等）
+docker	🐳 Dockerfile 或容器相关变更
+lint	🧹 代码检查工具配置或执行变动
+deps-dev	👷‍♂️ 开发依赖调整（如 eslint, prettier 升级）
