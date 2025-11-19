@@ -29,3 +29,36 @@ var dto = DateTimeOffset.Now; // 当前时间 + 本地偏移，如 +10:00
 ✅ 优势
 	• 保存了准确的时间点 + 偏移
 	• 推荐用于数据库持久化时间（尤其是日志、事件、时间线）
+
+
+⏳ 3. TimeSpan
+✅ 含义
+表示两个时间点之间的时间间隔，不是具体的时间。
+📦 示例
+var duration = TimeSpan.FromMinutes(90);
+📌 特点
+特性	说明
+仅表示间隔	✅ 如：1 天、2 小时、30 分钟
+不含日期	❌
+不含时区	❌
+可正可负	✅（如时间倒退）
+
+🧠 使用建议总结
+用途	推荐类型	原因
+表示时间点（当前时间）	DateTimeOffset ✅	保存 + 比较准确
+表示时间点（本地内部系统）	DateTime	如果不涉及时区，可简化
+表示持续时间、间隔	TimeSpan ✅	仅表示“多久”
+处理时区、全球用户	DateTimeOffset ✅✅	推荐
+显示用户时间	DateTime.ToLocalTime() 或 DateTimeOffset.ToLocalTime()	转为本地展示
+
+📦 EF Core 数据库映射
+类型	SQL Server 映射
+DateTime	datetime
+DateTimeOffset	datetimeoffset
+TimeSpan	time
+
+✅ 示例对比
+DateTime t1 = DateTime.UtcNow;             // "2025-06-23 00:00:00" (UTC)
+DateTimeOffset t2 = DateTimeOffset.Now;    // "2025-06-23 10:00:00 +10:00"
+TimeSpan t3 = TimeSpan.FromHours(1.5);     // "01:30:00"
+
