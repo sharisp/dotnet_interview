@@ -1,0 +1,200 @@
+React 性能优化可以分成两大块：
+1）**减少“干活”的次数（少渲染、少计算）**
+2）**让必须干的活更高效**
+
+
+---
+
+## 1️⃣ 减少不必要的重新渲染
+
+### 1.1 `React.memo` 避免子组件白刷
+
+**场景**：父组件更新，但某个子组件 props 没变却跟着一起重新渲染。
+
+```jsx
+const UserCard = React.memo(function UserCard({ user }) {
+  console.log("render UserCard");
+  return <div>{user.name}</div>;
+});
+```
+
+搭配 `useCallback` / `useMemo` 给子组件稳定的 props：
+
+```jsx
+const handleClick = useCallback(() => {
+  // ...
+}, []); // 依赖别填错
+
+<MyButton onClick={handleClick} />
+```
+
+> 原则：**经常重复渲染的组件 + props 很少变 → 用 `React.memo`**。
+
+---
+
+### 1.2 合理使用 `useMemo` / `useCallback`
+
+* `useMemo`：缓存**计算结果**（重计算的逻辑）
+* `useCallback`：缓存**函数引用**（避免子组件认为 props 变了）
+
+```jsx
+const expensiveValue = useMemo(() => {
+  return heavyCompute(data);
+}, [data]);
+```
+
+⚠️ 不要乱全局用：
+**小计算不用 memo，过度 useMemo 反而浪费时间。**
+
+---
+
+## 2️⃣ 列表 & 表格优化
+
+### 2.1 虚拟列表（Virtualization）
+
+当你渲染一个几百 / 几千行的列表时，一定要虚拟化：
+
+* 使用库：`react-window`, `react-virtualized`, `react-virtuoso` 等。
+
+原理：只渲染屏幕上能看到的那几十个节点，其余只是“占位”。
+
+```jsx
+import { FixedSizeList as List } from "react-window";
+
+<List
+  height={400}
+  itemCount={1000}
+  itemSize={35}
+  width={300}
+>
+  {({ index, style }) => (
+    <div style={style}>Row {index}</div>
+  )}
+</List>
+```
+
+> 长列表不卡顿的关键就是：**不要一次性渲染全部 DOM**。
+
+---
+
+### 2.2 合理使用 `key`
+
+* 使用稳定的 `key`（如 `id`），不要用 `index`（除非列表永远不增删）。
+* 错误的 key 会导致 React 反复销毁 / 重建 DOM，而不是复用。
+
+---
+
+## 3️⃣ 代码体积 & 加载优化
+
+### 3.1 懒加载（lazy load） + 代码分割
+
+你之前问过 `React.lazy`，这就是 **首屏性能优化的大头**：
+
+* 按路由拆：每个页面一个 chunk
+* 按功能拆：图表/编辑器/大组件单独拆
+
+```jsx
+const Chart = React.lazy(() => import("./Chart"));
+
+<Suspense fallback={<div>Loading chart...</div>}>
+  <Chart />
+</Suspense>
+```
+
+### 3.2 只在需要时加载第三方库
+
+比如一个很大的 `moment`, `lodash`, 图表库等：
+
+* 用动态 import：`import('./big-lib')`
+* 或使用更轻量替代品（`dayjs`、`lodash-es` tree-shaking）
+
+---
+
+## 4️⃣ 状态管理 & 组件结构
+
+### 4.1 减少“全局状态”污染
+
+状态放得越高，重新渲染波及的组件就越多。
+
+* 把只跟某个组件相关的状态放在**就近的组件**里，而不是上下文 / Redux 全局。
+* 使用多个小的 context 分开，而不是一个 giant context。
+
+### 4.2 拆组件，而不是一个大组件全包
+
+* 把变化频繁的部分拆成小组件，用 `React.memo` 包起来。
+* 父组件只负责布局，子组件独立管理细节。
+
+---
+
+## 5️⃣ 事件 & DOM 操作
+
+### 5.1 避免在 render 里创建大量匿名函数 / 对象
+
+虽然 JS 层面的创建本身不一定是大问题，但大量新引用会导致子组件误判为“props 改了”。
+
+```jsx
+// 不推荐
+<Child onClick={() => doSomething(item)} style={{color: "red"}} />
+
+// 推荐
+const handleClick = useCallback(() => doSomething(item), [item]);
+const style = useMemo(() => ({ color: "red" }), []);
+<Child onClick={handleClick} style={style} />
+```
+
+### 5.2 避免直接大量 DOM 操作
+
+* 用 React 的方式更新界面，减少 `document.querySelector` / `innerHTML`。
+* 如果必须操作 DOM，尽量集中在 `useEffect` 并控制依赖。
+
+---
+
+## 6️⃣ 构建 & 环境相关优化
+
+### 6.1 使用 production build
+
+* `create-react-app` / Vite / Next 构建时要用生产模式：
+
+  * CRA: `npm run build` 然后用静态服务器跑 `build` 目录
+  * Vite: `npm run build` + `npm run preview`
+
+生产模式会：
+
+* 移除开发警告
+* 做 tree-shaking、压缩、死代码消除
+* 性能会比开发环境快很多
+
+### 6.2 使用 React DevTools Profiler
+
+* 安装浏览器插件 React DevTools
+* 使用 **Profiler** tab：
+
+  * 看哪个组件渲染次数多
+  * 看每次渲染耗时
+  * 找出 “罪魁祸首” 再针对性用 `memo` / 调整状态
+
+---
+
+## 7️⃣ React 18 的一些优化点（可选）
+
+如果用 React 18，可以考虑：
+
+* `useTransition`：处理非紧急更新（如搜索过滤）避免卡 UI
+* `useDeferredValue`：在用户输入时延后渲染重计算的内容
+
+```jsx
+const [query, setQuery] = useState("");
+const [deferredQuery] = useDeferredValue(query);
+// 用 deferredQuery 做搜索，减少卡顿
+```
+
+---
+
+## 🔚 总结一个“优先级行动清单”
+
+1. ✅ **路由 & 大组件懒加载（lazy + Suspense）**
+2. ✅ **长列表用虚拟滚动（react-window 等）**
+3. ✅ **频繁渲染的组件用 React.memo + useMemo/useCallback**
+4. ✅ **把状态下放，不要所有东西都放全局**
+5. ✅ **Production build + Profiler 找瓶颈**
+
