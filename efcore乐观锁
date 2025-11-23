@@ -1,0 +1,4 @@
+EF Core 乐观并发
+	• 添加一个 RowVersion 字段（byte[]）
+	• 使用 [Timestamp] 注解，EF 会自动比较旧值与新值，冲突时报异常。
+悲观锁是锁行 锁表
