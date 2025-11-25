@@ -1,0 +1,5 @@
+Add-Migration init -Context MyDbContext  后边两个时因为有多个dbcontext
+
+Remove-Migration
+
+update-database
