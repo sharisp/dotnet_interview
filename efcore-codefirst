@@ -1,4 +1,4 @@
-Add-Migration init -Context MyDbContext  后边两个时因为有多个dbcontext
+Add-Migration init -Context MyDbContext  后边两个时因为有多个dbcontext,如果只有一个dbcontext的话，不需要指定-Context
 
 Remove-Migration
 
