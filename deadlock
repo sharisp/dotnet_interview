@@ -8,3 +8,58 @@ A deadlock occurs when two or more processes/threads are waiting for resources i
 	• Deadlocks usually happen in multithreading or database transactions.
 👉 In simple terms: Deadlock is like two people blocking each other in a narrow hallway—both refuse to move, so nobody can pass.
 
+
+1️⃣ Deadlock 示例 & 解决
+❌ 出现死锁
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+class Program
+{
+    private static readonly object lockA = new object();
+    private static readonly object lockB = new object();
+static void Main()
+    {
+        Task t1 = Task.Run(() =>
+        {
+            lock (lockA)
+            {
+                Thread.Sleep(100); // 模拟工作
+                lock (lockB) // 等待 lockB
+                {
+                    Console.WriteLine("Task1 got both locks");
+                }
+            }
+        });
+Task t2 = Task.Run(() =>
+        {
+            lock (lockB)
+            {
+                Thread.Sleep(100);
+                lock (lockA) // 等待 lockA
+                {
+                    Console.WriteLine("Task2 got both locks");
+                }
+            }
+        });
+Task.WaitAll(t1, t2);
+    }
+}
+➡ 两个线程互相等待对方的锁 → 死锁。
+
+✅ 解决办法
+统一加锁顺序，避免交叉等待：
+
+// 始终先锁 lockA，再锁 lockB
+lock (lockA)
+{
+    lock (lockB)
+    {
+        Console.WriteLine("No Deadlock");
+    }
+}
+👉 面试要点：避免死锁的办法
+	• 保持锁顺序一致
+	• 使用 Monitor.TryEnter() + 超时
+尽量减少锁的粒度
