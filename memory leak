@@ -1,0 +1,12 @@
+🔹 What is a Memory Leak?
+A memory leak happens when a program allocates memory but never releases it, even though it’s no longer needed.
+	• This causes memory usage to grow over time → system slows down or crashes.
+	• Common in long-running apps like web servers, desktop apps, or services.
+	• Example in C#:
+		○ Subscribing to an event but never unsubscribing.
+		○ Holding references in a static collection.
+👉 In simple terms: Memory leak is like borrowing books from the library and never returning them—the library eventually runs out of space.
+
+⚡ Quick Interview-Ready Answer:
+	• Deadlock: when two or more processes wait for each other’s resources, and none can proceed.
+Memory leak: when a program keeps memory it no longer needs, causing wasted resources.
