@@ -10,3 +10,66 @@ A memory leak happens when a program allocates memory but never releases it, eve
 ⚡ Quick Interview-Ready Answer:
 	• Deadlock: when two or more processes wait for each other’s resources, and none can proceed.
 Memory leak: when a program keeps memory it no longer needs, causing wasted resources.
+
+
+Memory Leak 示例 & 解决
+❌ 出现内存泄漏
+
+using System;
+class Publisher
+{
+    public event EventHandler? RaiseEvent;
+public void DoSomething() => RaiseEvent?.Invoke(this, EventArgs.Empty);
+}
+class Subscriber
+{
+    public Subscriber(Publisher pub)
+    {
+        // 订阅事件，但没取消订阅
+        pub.RaiseEvent += Handler;
+    }
+private void Handler(object? sender, EventArgs e)
+    {
+        Console.WriteLine("Event received.");
+    }
+}
+class Program
+{
+    static void Main()
+    {
+        Publisher pub = new Publisher();
+        Subscriber sub = new Subscriber(pub);
+// 即使 Subscriber 超出作用域，仍然被 Publisher 引用 → 无法 GC 回收 → Memory Leak
+    }
+}
+
+✅ 解决办法
+	1. 手动取消订阅：
+
+pub.RaiseEvent -= Handler;
+	2. 使用弱引用事件模式 (WeakEventManager)
+在 WPF / .NET 中可以避免事件导致的内存泄漏。
+	3. 用 using / Dispose 来释放资源：
+
+class Subscriber : IDisposable
+{
+    private readonly Publisher _pub;
+public Subscriber(Publisher pub)
+    {
+        _pub = pub;
+        _pub.RaiseEvent += Handler;
+    }
+public void Dispose()
+    {
+        _pub.RaiseEvent -= Handler; // 取消订阅，避免泄漏
+    }
+private void Handler(object? sender, EventArgs e)
+    {
+        Console.WriteLine("Event received.");
+    }
+}
+
+	总结（面试速答）
+		• Memory Leak: 内存分配后未释放。
+✅ 解决 → 取消事件订阅 / 用 Dispose 模式 / 弱引用。
+
