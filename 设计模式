@@ -1,4 +1,12 @@
 GOF 经典设计模式（代码层级）
+“GOF 经典设计模式”中的 GOF 是 Gang of Four（四人帮） 的缩写，指的是四位作者：
+Erich Gamma、Richard Helm、Ralph Johnson、John Vlissides。
+他们合著了软件工程史上极具影响力的一本书：
+
+《Design Patterns: Elements of Reusable Object-Oriented Software》（1994）
+《设计模式：可复用面向对象软件的基础》
+
+这本书首次系统化总结了 23 种面向对象“经典设计模式”，因此这些模式被称为 GOF 设计模式。
 
 Factory（工厂）
 
