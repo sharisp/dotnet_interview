@@ -69,7 +69,7 @@ private void Handler(object? sender, EventArgs e)
     }
 }
 
-	总结（面试速答）
+	总结
 		• Memory Leak: 内存分配后未释放。
 ✅ 解决 → 取消事件订阅 / 用 Dispose 模式 / 弱引用。
 
