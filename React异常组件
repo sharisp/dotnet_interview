@@ -54,3 +54,33 @@ function App() {
   );
 }
 结果：显示 fallback UI，不会导致整个应用白屏。
+
+
+
+📌 Hooks 时代怎么办？能用函数组件吗？
+目前：
+❌ 不能使用函数组件直接实现 Error Boundary
+✔ 但 React 团队未来会提供函数版错误边界（React 官方 roadmap）
+现在可做的是：
+	• 自己写 Class 组件（上面示例）
+	• 或使用第三方库（如 react-error-boundary）
+
+🔥 推荐：函数组件项目最好的方案（第三方库）
+
+npm i react-error-boundary
+示例：
+
+import { ErrorBoundary } from "react-error-boundary";
+function Fallback({ error }) {
+  return <p>出错了：{error.message}</p>;
+}
+<ErrorBoundary FallbackComponent={Fallback}>
+  <YourComponent />
+</ErrorBoundary>
+✔ 支持函数组件
+✔ 更灵活，推荐在实际项目中使用
+
+⭐ 总结一句话（面试用）
+	React 的异常捕获组件叫 Error Boundary，
+	当前只能用类组件实现，用 componentDidCatch 和 getDerivedStateFromError 捕获渲染错误，
+用于防止整个应用崩溃。
