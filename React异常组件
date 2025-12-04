@@ -1,0 +1,56 @@
+Error Boundary 能捕获什么？
+可以捕获：
+	• 渲染阶段的错误
+	• 生命周期中的错误
+	• 子组件树中抛出的错误
+不能捕获：
+	• 事件处理函数（onClick）
+	• 异步代码（setTimeout、Promise）
+	• 服务端渲染
+	• 自己 Error Boundary 内的错误
+
+✅ 标准写法（最常用）
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+componentDidCatch(error, info) {
+    console.error("Caught by ErrorBoundary:", error, info);
+  }
+render() {
+    if (this.state.hasError) {
+      return <h2>页面出错了，请稍后重试。</h2>;
+    }
+    return this.props.children;
+  }
+}
+使用方式：
+
+<ErrorBoundary>
+  <YourComponent />
+</ErrorBoundary>
+
+📌 捕获异常流程
+	1. 子组件渲染时抛出错误
+	2. 进入 getDerivedStateFromError，设置 hasError
+	3. 渲染 fallback UI
+	4. componentDidCatch 记录日志（推荐上报到监控系统）
+
+📌 简单示例
+
+function Bug() {
+  throw new Error("Something went wrong!");
+}
+function App() {
+  return (
+    <ErrorBoundary>
+      <Bug />
+    </ErrorBoundary>
+  );
+}
+结果：显示 fallback UI，不会导致整个应用白屏。
